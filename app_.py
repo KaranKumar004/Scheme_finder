@@ -17,12 +17,9 @@ import gemini_handler as nlp
 
 app = Flask(__name__)
 
-# Register WhatsApp webhook blueprint
-from whatsapp import whatsapp_webhook
-app.register_blueprint(whatsapp_webhook)
-
 @app.route("/")
 def home():
+    # Make sure DB is populated
     init_db()
     return render_template("index.html")
 
@@ -30,6 +27,7 @@ def home():
 def api_match():
     try:
         profile = request.json or {}
+        # Ensure income is an integer
         if "income" in profile and profile["income"] is not None:
             try:
                 profile["income"] = int(profile["income"])
@@ -46,18 +44,25 @@ def api_chat():
         data = request.json or {}
         user_message = data.get("message", "").strip()
         last_matches = data.get("last_matches", [])
-
+        
         if not user_message:
             return jsonify({"success": False, "error": "Message is required"}), 400
 
+        # Check if it's a detail request (a plain number)
         if re.match(r"^\s*\d+\s*$", user_message) and last_matches:
             num = int(user_message.strip())
             reply = nlp.generate_reply(last_matches, user_message, detail_request=num)
-            return jsonify({"success": True, "reply": reply, "is_detail": True})
+            return jsonify({
+                "success": True,
+                "reply": reply,
+                "is_detail": True
+            })
 
+        # Otherwise, perform full profile extraction and matching
         profile = nlp.extract_profile(user_message)
         lang = profile.get("language", "english")
-
+        
+        # Clean language and other attributes
         clean_profile = {k: v for k, v in profile.items() if k != "language"}
         if "income" in clean_profile and clean_profile["income"] is not None:
             try:
