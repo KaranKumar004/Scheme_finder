@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from scheme_db import init_db, get_all_schemes, insert_scheme, delete_scheme
 from matcher import match_schemes
-import test as nlp
+import gemini_handler as nlp
 
 app = Flask(__name__)
 
