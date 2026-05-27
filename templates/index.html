@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>India Government Welfare & Scheme Finder Portal</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- LIGHT GLOWING ACCENT DECORATIONS -->
+    <div class="glow-sphere glow-saffron"></div>
+    <div class="glow-sphere glow-indigo"></div>
+    <div class="glow-sphere glow-emerald"></div>
+
+    <!-- MAIN DASHBOARD SHELL -->
+    <div class="dashboard-shell">
+        
+        <!-- SIDEBAR NAVIGATION -->
+        <aside class="dashboard-sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-badge">🇮🇳</div>
+                <div class="brand-meta">
+                    <h2>Welfare Portal</h2>
+                    <span>Government of India</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button id="tab-wizard" class="menu-item active">
+                    <i data-lucide="layout-grid"></i>
+                    <span>Guided Finder</span>
+                </button>
+                <button id="tab-chat" class="menu-item">
+                    <i data-lucide="message-square-text"></i>
+                    <span>AI Assistant</span>
+                </button>
+                <button id="admin-toggle-btn" class="menu-item admin-menu-btn">
+                    <i data-lucide="settings"></i>
+                    <span>Manage Database</span>
+                </button>
+            </nav>
+
+            <!-- SIDEBAR PROFILE SYNC STATE -->
+            <div class="sidebar-profile-sync" id="ai-profile-sync">
+                <div class="sync-header">
+                    <i data-lucide="fingerprint" class="glowing-icon"></i>
+                    <h4>Active Profile</h4>
+                </div>
+                <div class="sync-badge-list" id="sync-tags-container">
+                    <span class="empty-sync">No details active</span>
+                </div>
+                <p class="sync-desc">Interactions on Guided Finder or AI Chat automatically update this state.</p>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>Digital India Initiative</p>
+                <span>v2.1.0 (Gemini Powered)</span>
+            </div>
+        </aside>
+
+        <!-- MAIN DASHBOARD CONTENT VIEW -->
+        <main class="dashboard-main">
+            
+            <!-- HEADER -->
+            <header class="main-header">
+                <div class="header-intro">
+                    <h2>Welcome to Scheme Finder</h2>
+                    <p>Securing dignity, opportunity, and welfare benefits for every citizen.</p>
+                </div>
+                <div class="header-status">
+                    <div class="status-pulse"></div>
+                    <span>Welfare Sync Online</span>
+                </div>
+            </header>
+
+            <!-- CONTENT BODY GRID -->
+            <div class="main-body-layout">
+                
+                <!-- LEFT INTERACTIVE PANEL -->
+                <section class="body-panel left-panel">
+                    
+                    <!-- WIZARD MODULE -->
+                    <div id="content-wizard" class="tab-content active">
+                        <div class="module-header">
+                            <div class="module-title">
+                                <h3>Guided Welfare Finder</h3>
+                                <p>Fill out the profile criteria to find matched central and state schemes.</p>
+                            </div>
+                            <div class="wizard-steps-indicator">
+                                <div class="step-progress-track">
+                                    <div id="wizard-progress-fill" style="width: 16.66%;"></div>
+                                </div>
+                                <span id="wizard-step-label">Step 1 of 6</span>
+                            </div>
+                        </div>
+
+                        <form id="profile-form" onsubmit="event.preventDefault();">
+                            
+                            <!-- STEP 1: STATE -->
+                            <div class="wizard-step active" data-step="1">
+                                <div class="step-title-block">
+                                    <h4>📍 Which State are you from?</h4>
+                                    <p>Select your home state to retrieve targeted local welfare benefits in addition to all-India schemes.</p>
+                                </div>
+                                <div class="options-grid grid-3">
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Karnataka">
+                                        <span class="option-content">
+                                            <span class="option-label">Karnataka</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Maharashtra">
+                                        <span class="option-content">
+                                            <span class="option-label">Maharashtra</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Tamil Nadu">
+                                        <span class="option-content">
+                                            <span class="option-label">Tamil Nadu</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Andhra Pradesh">
+                                        <span class="option-content">
+                                            <span class="option-label">Andhra Pradesh</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Telangana">
+                                        <span class="option-content">
+                                            <span class="option-label">Telangana</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Kerala">
+                                        <span class="option-content">
+                                            <span class="option-label">Kerala</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Uttar Pradesh">
+                                        <span class="option-content">
+                                            <span class="option-label">Uttar Pradesh</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Rajasthan">
+                                        <span class="option-content">
+                                            <span class="option-label">Rajasthan</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card state-card">
+                                        <input type="radio" name="state" value="Other">
+                                        <span class="option-content">
+                                            <span class="option-label">Other States</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: OCCUPATION -->
+                            <div class="wizard-step" data-step="2">
+                                <div class="step-title-block">
+                                    <h4>🧑‍🌾 What is your primary occupation?</h4>
+                                    <p>Select the option that best represents your primary livelihood.</p>
+                                </div>
+                                <div class="options-grid grid-2">
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="farmer">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-green">
+                                                <i data-lucide="sprout"></i>
+                                            </div>
+                                            <span class="option-title">Smallholder Farmer</span>
+                                            <span class="option-desc">Smallholder or agricultural worker</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="daily_wage">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-orange">
+                                                <i data-lucide="hammer"></i>
+                                            </div>
+                                            <span class="option-title">Daily Wage / Labourer</span>
+                                            <span class="option-desc">Unorganised sector or construction labor</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="self_employed">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-blue">
+                                                <i data-lucide="store"></i>
+                                            </div>
+                                            <span class="option-title">Self-Employed</span>
+                                            <span class="option-desc">Own a small business, shop, or trade</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="unemployed">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-purple">
+                                                <i data-lucide="user-x"></i>
+                                            </div>
+                                            <span class="option-title">Not Currently Employed</span>
+                                            <span class="option-desc">Currently seeking livelihood opportunity</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="salaried">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-teal">
+                                                <i data-lucide="briefcase"></i>
+                                            </div>
+                                            <span class="option-title">Salaried Employee</span>
+                                            <span class="option-desc">Regular private or public employment</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="occupation" value="other">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-grey">
+                                                <i data-lucide="help-circle"></i>
+                                            </div>
+                                            <span class="option-title">Other Occupation</span>
+                                            <span class="option-desc">Any other profession</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: INCOME -->
+                            <div class="wizard-step" data-step="3">
+                                <div class="step-title-block">
+                                    <h4>💰 Annual Household Income</h4>
+                                    <p>Total annual income earned by all members of your household.</p>
+                                </div>
+                                <div class="income-slider-module">
+                                    <div class="income-slider-header">
+                                        <span id="income-amount-text">₹ 1,50,000</span>
+                                        <span class="income-status-badge" id="income-level-badge">Welfare Support Eligible</span>
+                                    </div>
+                                    <div class="slider-control-row">
+                                        <input type="range" id="income-slider" min="0" max="800000" step="10000" value="150000">
+                                    </div>
+                                    <div class="slider-labels">
+                                        <span>₹0</span>
+                                        <span>₹2.5L (Priority)</span>
+                                        <span>₹5L</span>
+                                        <span>₹8L+</span>
+                                    </div>
+                                </div>
+                                <div class="quick-selector-row">
+                                    <span class="quick-label">Or Select Standard Bands:</span>
+                                    <div class="quick-selector-chips">
+                                        <button type="button" class="btn btn-chip" onclick="setIncome(80000)">₹80,000 (Priority Welfare / Antyodaya)</button>
+                                        <button type="button" class="btn btn-chip" onclick="setIncome(180000)">₹1.8 Lakh</button>
+                                        <button type="button" class="btn btn-chip" onclick="setIncome(350000)">₹3.5 Lakh</button>
+                                        <button type="button" class="btn btn-chip" onclick="setIncome(650000)">₹6.5 Lakh</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: FAMILY SITUATION -->
+                            <div class="wizard-step" data-step="4">
+                                <div class="step-title-block">
+                                    <h4>👨‍👩‍👧 Family Situation</h4>
+                                    <p>Some security pensions depend on your family household status.</p>
+                                </div>
+                                <div class="options-grid grid-2">
+                                    <label class="option-card">
+                                        <input type="radio" name="family" value="single">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-blue">
+                                                <i data-lucide="user"></i>
+                                            </div>
+                                            <span class="option-title">Single</span>
+                                            <span class="option-desc">Unmarried or living alone</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="family" value="married">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-teal">
+                                                <i data-lucide="users"></i>
+                                            </div>
+                                            <span class="option-title">Married</span>
+                                            <span class="option-desc">Living with spouse and/or dependants</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="family" value="widow">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-pink">
+                                                <i data-lucide="heart-handshake"></i>
+                                            </div>
+                                            <span class="option-title">Widowed</span>
+                                            <span class="option-desc">Eligible for social security widow pensions</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="family" value="single_parent">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-purple">
+                                                <i data-lucide="heart-pulse"></i>
+                                            </div>
+                                            <span class="option-title">Single Parent</span>
+                                            <span class="option-desc">Supporting household as sole guardian</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- STEP 5: SPECIAL SITUATIONS -->
+                            <div class="wizard-step" data-step="5">
+                                <div class="step-title-block">
+                                    <h4>🌟 Do you or your family belong to any of these categories?</h4>
+                                    <p>Welfare programs often allocate specific funding for priority community groups.</p>
+                                </div>
+                                <div class="options-grid grid-2">
+                                    <label class="option-card">
+                                        <input type="radio" name="special" value="disabled">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-blue">
+                                                <i data-lucide="accessibility"></i>
+                                            </div>
+                                            <span class="option-title">Special Needs / Disability</span>
+                                            <span class="option-desc">Person with 40%+ disability status</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="special" value="senior">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-orange">
+                                                <i data-lucide="award"></i>
+                                            </div>
+                                            <span class="option-title">Senior Citizen</span>
+                                            <span class="option-desc">Aged 60 years or above</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="special" value="pregnant">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-pink">
+                                                <i data-lucide="baby"></i>
+                                            </div>
+                                            <span class="option-title">Pregnant / Lactating Mother</span>
+                                            <span class="option-desc">Seeking maternity or infant health support</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="special" value="student">
+                                        <span class="option-content">
+                                            <div class="option-icon-circle icon-purple">
+                                                <i data-lucide="graduation-cap"></i>
+                                            </div>
+                                            <span class="option-title">Student</span>
+                                            <span class="option-desc">Enrolled in school, college, or university</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card full-width">
+                                        <input type="radio" name="special" value="none">
+                                        <span class="option-content flex-row">
+                                            <div class="option-icon-circle icon-grey">
+                                                <i data-lucide="slash"></i>
+                                            </div>
+                                            <div>
+                                                <span class="option-title">None of These</span>
+                                                <span class="option-desc">I do not belong to any special priority groups</span>
+                                            </div>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- STEP 6: GENDER -->
+                            <div class="wizard-step" data-step="6">
+                                <div class="step-title-block">
+                                    <h4>🚻 Gender</h4>
+                                    <p>Many programs are exclusively funded to support women's empowerment and economic safety.</p>
+                                </div>
+                                <div class="options-grid grid-3">
+                                    <label class="option-card">
+                                        <input type="radio" name="gender" value="female">
+                                        <span class="option-content centered">
+                                            <div class="option-icon-circle icon-pink">
+                                                <i data-lucide="venus"></i>
+                                            </div>
+                                            <span class="option-title">Female</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="gender" value="male">
+                                        <span class="option-content centered">
+                                            <div class="option-icon-circle icon-blue">
+                                                <i data-lucide="mars"></i>
+                                            </div>
+                                            <span class="option-title">Male</span>
+                                        </span>
+                                    </label>
+                                    <label class="option-card">
+                                        <input type="radio" name="gender" value="other">
+                                        <span class="option-content centered">
+                                            <div class="option-icon-circle icon-teal">
+                                                <i data-lucide="gender-neuter"></i>
+                                            </div>
+                                            <span class="option-title">Other</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- WIZARD STEP NAVIGATION BAR -->
+                            <div class="wizard-navigation-bar">
+                                <button type="button" id="wizard-prev-btn" class="btn btn-secondary" disabled>
+                                    <i data-lucide="chevron-left"></i>
+                                    <span>Back</span>
+                                </button>
+                                <button type="button" id="wizard-next-btn" class="btn btn-primary">
+                                    <span>Next Step</span>
+                                    <i data-lucide="chevron-right"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- AI CHAT ASSISTANT MODULE -->
+                    <div id="content-chat" class="tab-content">
+                        <div class="chat-wrapper">
+                            
+                            <!-- Messages Area -->
+                            <div class="chat-viewport" id="chat-messages">
+                                <div class="chat-msg bot">
+                                    <div class="msg-avatar-wrapper">🙏</div>
+                                    <div class="msg-card">
+                                        <p>Namaste! I am your AI Welfare Scheme Assistant.</p>
+                                        <p>You can talk to me in **English, Hindi, Kannada, Tamil, or any Indian language**. Just share your situation with me, for example:</p>
+                                        
+                                        <div class="chat-quick-suggestions">
+                                            <button class="btn-suggestion-chip" onclick="sendSuggestion('I am a smallholder farmer in Karnataka')">
+                                                <i data-lucide="sprout"></i>
+                                                <span>"I am a smallholder farmer in Karnataka"</span>
+                                            </button>
+                                            <button class="btn-suggestion-chip" onclick="sendSuggestion('Main UP se hoon aur mujhe Janani Suraksha Yojana ki jaankari chahiye')">
+                                                <i data-lucide="baby"></i>
+                                                <span>"Mujhe Janani Suraksha Yojana ki jaankari chahiye..."</span>
+                                            </button>
+                                            <button class="btn-suggestion-chip" onclick="sendSuggestion('I am a student with a disability, annual household income is 1.5 Lakh')">
+                                                <i data-lucide="accessibility"></i>
+                                                <span>"I am a student with a disability..."</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Input Area -->
+                            <div class="chat-input-row">
+                                <input type="text" id="chat-input-field" placeholder="Type your message here (e.g. Hindi, Kannada, English)..." autocomplete="off">
+                                <button id="chat-send-btn" class="btn btn-primary btn-chat-submit">
+                                    <i data-lucide="send"></i>
+                                    <span>Send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- RIGHT RESULTS GRID VIEW -->
+                <section class="body-panel right-panel">
+                    <div class="results-meta-bar">
+                        <div class="results-meta-title">
+                            <h3>Eligible Welfare Schemes</h3>
+                            <span id="results-count" class="results-indicator-badge">0 Matches</span>
+                        </div>
+                        <p class="results-meta-desc">These benefits are dynamically updated to match your profile.</p>
+                    </div>
+
+                    <!-- Schemes Card Deck -->
+                    <div class="schemes-layout-deck" id="schemes-list">
+                        
+                        <!-- Initial Blank State -->
+                        <div class="blank-state">
+                            <div class="blank-state-glowing-circle">
+                                <i data-lucide="sparkles"></i>
+                            </div>
+                            <h3>Complete Your Profile to Match Schemes</h3>
+                            <p>Fill out the guided finder wizard on the left, or converse with the AI Scheme Assistant. Eligible programs will appear here automatically with gradient highlights.</p>
+                        </div>
+
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- STUNNING SCHEME DETAILS MODAL -->
+    <div id="details-modal" class="modal-overlay">
+        <div class="modal-card-box">
+            <button class="btn-modal-close" id="modal-close-btn">&times;</button>
+            
+            <div class="modal-header-section">
+                <span id="modal-level" class="badge">CENTRAL PROGRAM</span>
+                <h2 id="modal-name">Scheme Full Name</h2>
+                <div class="modal-header-meta">
+                    <i data-lucide="building-2"></i>
+                    <span id="modal-ministry">Ministry of Agriculture</span>
+                </div>
+            </div>
+
+            <div class="modal-body-section">
+                
+                <!-- BENEFIT HIGHLIGHT CARD -->
+                <div class="modal-benefit-spotlight">
+                    <span class="spotlight-title">Financial Welfare Benefit</span>
+                    <h3 id="modal-benefit">₹ 6,000 / year</h3>
+                    <p id="modal-description">Direct income support provided in three equal instalments.</p>
+                </div>
+
+                <!-- ELIGIBILITY & DOCUMENT CHECKLIST -->
+                <div class="modal-details-grid">
+                    <div class="details-column">
+                        <h4>
+                            <i data-lucide="check-square" class="text-indigo"></i>
+                            <span>Who Qualifies</span>
+                        </h4>
+                        <p id="modal-eligibility">Detailed eligibility note.</p>
+                    </div>
+                    <div class="details-column">
+                        <h4>
+                            <i data-lucide="file-signature" class="text-emerald"></i>
+                            <span>Mandatory Documents</span>
+                        </h4>
+                        <ul id="modal-documents" class="modal-checklist">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- STEPS TO APPLY -->
+                <div class="modal-procedure-section">
+                    <h4>
+                        <i data-lucide="arrow-right-circle" class="text-saffron"></i>
+                        <span>How to Register & Apply</span>
+                    </h4>
+                    <p id="modal-apply" class="procedure-text"></p>
+                </div>
+
+            </div>
+
+            <div class="modal-footer-section">
+                <a id="modal-link" href="#" target="_blank" class="btn btn-primary btn-modal-apply">
+                    <span>Visit Official Application Portal</span>
+                    <i data-lucide="external-link"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- PORTAL SETTINGS & SCHEME ADMIN MODAL -->
+    <div id="admin-modal" class="modal-overlay">
+        <div class="modal-card-box admin-card-box">
+            <button class="btn-modal-close" id="admin-close-btn">&times;</button>
+            
+            <div class="modal-header-section">
+                <h2>Administrative Panel</h2>
+                <p class="modal-subtitle">Manage welfare database entries in schemes.db</p>
+            </div>
+
+            <div class="admin-tab-row">
+                <button id="btn-admin-list" class="admin-tab-trigger active">
+                    <i data-lucide="list"></i>
+                    <span>All Schemes</span>
+                </button>
+                <button id="btn-admin-add" class="admin-tab-trigger">
+                    <i data-lucide="plus-circle"></i>
+                    <span>Add Welfare Entry</span>
+                </button>
+            </div>
+
+            <div class="admin-body-section">
+                
+                <!-- LIST SCHEMES TAB -->
+                <div id="admin-tab-list-content" class="admin-tab-panel active">
+                    <div class="admin-search-wrapper">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="admin-search-input" placeholder="Search database schemes by name or department...">
+                    </div>
+                    <div class="admin-table-deck" id="admin-schemes-table">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- ADD SCHEME TAB -->
+                <div id="admin-tab-add-content" class="admin-tab-panel">
+                    <form id="add-scheme-form" onsubmit="event.preventDefault(); submitNewScheme();" class="admin-scroll-form">
+                        
+                        <div class="admin-form-row">
+                            <div class="form-field width-66">
+                                <label for="form-name">Scheme / Program Title *</label>
+                                <input type="text" id="form-name" required placeholder="e.g. Pradhan Mantri Kisan Samman Nidhi">
+                            </div>
+                            <div class="form-field width-33">
+                                <label for="form-level">Funding Level</label>
+                                <select id="form-level">
+                                    <option value="central">Central (Federal)</option>
+                                    <option value="state">State Specific</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="form-field width-50">
+                                <label for="form-ministry">Ministry / Department</label>
+                                <input type="text" id="form-ministry" placeholder="e.g. Ministry of Rural Development">
+                            </div>
+                            <div class="form-field width-50">
+                                <label for="form-benefit-amt">Financial Benefit</label>
+                                <input type="text" id="form-benefit-amt" placeholder="e.g. Rs 1,000/month or Rs 6,000/year">
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-desc">Benefit Details & Description</label>
+                            <textarea id="form-desc" rows="2" placeholder="Briefly specify what direct or indirect benefits the citizen receives..."></textarea>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="form-field width-50">
+                                <label for="form-apply">Registration / Application Procedure</label>
+                                <textarea id="form-apply" rows="2" placeholder="e.g. Apply online at pmkisan.gov.in or visit local Nadakacheri."></textarea>
+                            </div>
+                            <div class="form-field width-50">
+                                <label for="form-docs">Documents Required (comma-separated)</label>
+                                <textarea id="form-docs" rows="2" placeholder="e.g. Aadhaar card, Land Record (RTC), Bank passbook, BPL card"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row">
+                            <div class="form-field width-33">
+                                <label for="form-states">States (comma-separated, blank for all-India)</label>
+                                <input type="text" id="form-states" placeholder="e.g. Karnataka">
+                            </div>
+                            <div class="form-field width-33">
+                                <label for="form-min-income">Min Income Limit (Rs/year)</label>
+                                <input type="number" id="form-min-income" placeholder="e.g. 0">
+                            </div>
+                            <div class="form-field width-33">
+                                <label for="form-max-income">Max Income Limit (Rs/year)</label>
+                                <input type="number" id="form-max-income" placeholder="e.g. 250000">
+                            </div>
+                        </div>
+
+                        <!-- CATEGORY SELECTIONS -->
+                        <div class="admin-category-panel">
+                            <h5>Livelihood Qualifications</h5>
+                            <div class="admin-checkbox-grid">
+                                <label><input type="checkbox" id="chk-occ-farmer"> Smallholder Farmer</label>
+                                <label><input type="checkbox" id="chk-occ-daily-wage"> Daily Wage Labour</label>
+                                <label><input type="checkbox" id="chk-occ-unemployed"> Unemployed</label>
+                                <label><input type="checkbox" id="chk-occ-self-employed"> Self Employed</label>
+                                <label><input type="checkbox" id="chk-occ-salaried"> Salaried</label>
+                                <label><input type="checkbox" id="chk-occ-any"> Any Occupation</label>
+                            </div>
+                        </div>
+
+                        <div class="admin-category-panel">
+                            <h5>Family Situation Qualifications</h5>
+                            <div class="admin-checkbox-grid">
+                                <label><input type="checkbox" id="chk-fam-widow"> Widowed</label>
+                                <label><input type="checkbox" id="chk-fam-single-parent"> Single Parent</label>
+                                <label><input type="checkbox" id="chk-fam-married"> Married</label>
+                                <label><input type="checkbox" id="chk-fam-single"> Single</label>
+                                <label><input type="checkbox" id="chk-fam-any"> Any Family Situation</label>
+                            </div>
+                        </div>
+
+                        <div class="admin-category-panel">
+                            <h5>Target Demographic / Vulnerable Groups</h5>
+                            <div class="admin-checkbox-grid">
+                                <label><input type="checkbox" id="chk-sp-disabled"> Special Needs / Disability</label>
+                                <label><input type="checkbox" id="chk-sp-senior"> Senior Citizen</label>
+                                <label><input type="checkbox" id="chk-sp-pregnant"> Pregnant / Lactating</label>
+                                <label><input type="checkbox" id="chk-sp-student"> Student</label>
+                                <label><input type="checkbox" id="chk-sp-any"> Any Special Category</label>
+                            </div>
+                        </div>
+
+                        <div class="admin-form-row pt-1">
+                            <div class="form-field width-50">
+                                <label for="form-women-only">Gender Restriction</label>
+                                <select id="form-women-only">
+                                    <option value="0">Universal (All Genders)</option>
+                                    <option value="1">Women Only</option>
+                                </select>
+                            </div>
+                            <div class="form-field width-50">
+                                <label for="form-url">Official Portal Link</label>
+                                <input type="url" id="form-url" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="form-eligibility-note">Eligibility Note (Displayed to citizen)</label>
+                            <input type="text" id="form-eligibility-note" placeholder="e.g. Farmers owning cultivable land up to 2 acres">
+                        </div>
+
+                        <button type="submit" id="add-scheme-submit-btn" class="btn btn-primary btn-save-database mt-1">
+                            <i data-lucide="database-backup"></i>
+                            <span>Save Welfare Scheme to Database</span>
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- App JavaScript -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
