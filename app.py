@@ -3,12 +3,10 @@ import os
 import sys
 import re
 
-# Force UTF-8 stdout/stderr on Windows to prevent UnicodeEncodeError
 if sys.platform.startswith('win'):
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
-# Ensure we can import siblings
 sys.path.insert(0, os.path.dirname(__file__))
 
 from scheme_db import init_db, get_all_schemes, insert_scheme, delete_scheme
@@ -17,14 +15,37 @@ import gemini_handler as nlp
 
 app = Flask(__name__)
 
-# Register WhatsApp webhook blueprint
 from whatsapp import whatsapp_webhook
 app.register_blueprint(whatsapp_webhook)
+
 
 @app.route("/")
 def home():
     init_db()
     return render_template("index.html")
+
+
+# ── DEBUG ENDPOINT — visit in browser to diagnose Gemini ─────────────────────
+@app.route("/debug/gemini")
+def debug_gemini():
+    import os as _os
+    key = _os.environ.get("GEMINI_API_KEY", "")
+    key_preview = (key[:6] + "..." + key[-4:]) if len(key) > 10 else ("SET but short" if key else "NOT SET")
+
+    result = {"api_key_preview": key_preview}
+
+    try:
+        test_msg = "I am a widow farmer in Karnataka, income below 1 lakh"
+        profile = nlp.extract_profile(test_msg)
+        result["extract_profile_result"] = profile
+        result["status"] = "OK" if profile else "RETURNED_NONE"
+    except Exception as e:
+        result["extract_profile_error"] = str(e)
+        result["status"] = "ERROR"
+
+    return jsonify(result)
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 @app.route("/api/match", methods=["POST"])
 def api_match():
@@ -39,6 +60,7 @@ def api_match():
         return jsonify({"success": True, "matches": matches})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
+
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
@@ -56,9 +78,17 @@ def api_chat():
             return jsonify({"success": True, "reply": reply, "is_detail": True})
 
         profile = nlp.extract_profile(user_message)
-        lang = profile.get("language", "english")
 
+        # FIX: profile can be None if Gemini fails — handle gracefully
+        if not profile:
+            return jsonify({
+                "success": False,
+                "error": "Could not extract profile from message"
+            }), 400
+
+        lang = profile.get("language", "english")
         clean_profile = {k: v for k, v in profile.items() if k != "language"}
+
         if "income" in clean_profile and clean_profile["income"] is not None:
             try:
                 clean_profile["income"] = int(clean_profile["income"])
@@ -79,6 +109,7 @@ def api_chat():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
 
+
 @app.route("/api/schemes", methods=["GET", "POST"])
 def api_schemes():
     if request.method == "POST":
@@ -97,6 +128,7 @@ def api_schemes():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 400
 
+
 @app.route("/api/schemes/<int:scheme_id>", methods=["DELETE"])
 def api_delete_scheme(scheme_id):
     try:
@@ -107,6 +139,7 @@ def api_delete_scheme(scheme_id):
             return jsonify({"success": False, "error": "Scheme not found"}), 404
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
+
 
 if __name__ == "__main__":
     init_db()
