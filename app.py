@@ -145,3 +145,56 @@ if __name__ == "__main__":
     init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=False, host="0.0.0.0", port=port)
+
+
+@app.route("/debug/gemini/raw")
+def debug_gemini_raw():
+    """Returns the exact raw text Gemini sends back — for diagnosing parse failures."""
+    import os as _os
+    from google import genai as _genai
+    import re as _re
+
+    key = _os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key:
+        return jsonify({"error": "GEMINI_API_KEY not set"})
+
+    try:
+        _client = _genai.Client(api_key=key)
+        test_msg = "I am a widow farmer in Karnataka, income below 1 lakh"
+
+        prompt = (
+            "You are helping a Government Scheme Finder for India.\n"
+            "Extract eligibility info from the user message.\n"
+            "Return ONLY valid JSON with NO markdown fences and NO explanation.\n\n"
+            'Example: {"state":"karnataka","occupation":"farmer","income":100000,"family":"widow","special":null,"gender":null,"language":"english"}\n\n'
+            f"User message:\n{test_msg}"
+        )
+
+        response = _client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+        )
+
+        raw = response.text.strip() if response.text else "(empty response)"
+
+        # Try parsing
+        cleaned = _re.sub(r"```json", "", raw)
+        cleaned = _re.sub(r"```", "", cleaned).strip()
+
+        try:
+            import json as _json
+            parsed = _json.loads(cleaned)
+            parse_status = "OK"
+        except Exception as pe:
+            parsed = None
+            parse_status = f"PARSE_ERROR: {pe}"
+
+        return jsonify({
+            "raw_response": raw,
+            "cleaned": cleaned,
+            "parse_status": parse_status,
+            "parsed": parsed,
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
