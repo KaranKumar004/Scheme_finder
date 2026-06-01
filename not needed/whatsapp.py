@@ -1,5 +1,6 @@
 """
 whatsapp.py — Twilio WhatsApp webhook handler
+
 Receives WhatsApp messages and routes them through the scheme matching engine.
 
 Add to app.py:
@@ -57,18 +58,22 @@ def format_for_whatsapp(matches: list) -> str:
 
     for i, s in enumerate(matches, 1):
         reasons = ", ".join(s.get("match_reasons", []))
+        # ── FIX 1: include scheme URL / apply link ──────────────────
+        scheme_url = s.get("url", "").strip()
+        url_line = f"🔗 {scheme_url}\n" if scheme_url else ""
+        # ────────────────────────────────────────────────────────────
         lines.append(
             f"*{i}. {s['name']}*\n"
             f"💰 {s['benefit_amount']}\n"
             f"✅ Because: {reasons}\n"
-            f"🏛 Apply: {s['how_to_apply'][:80]}...\n"
+            f"📌 Apply: {s['how_to_apply'][:80]}...\n"
+            f"{url_line}"
         )
+        lines.append("─────────────────────")
 
-    lines.append("─────────────────────")
     lines.append("Reply with a *number* (1, 2...) for full details.")
     lines.append("Type *START* to check for someone else.")
     lines.append("\n⚠️ For information only. Verify at official government websites.")
-
     return "\n".join(lines)
 
 
@@ -89,35 +94,54 @@ def format_detail_for_whatsapp(scheme: dict) -> str:
     )
 
 
+# ── FIX 2: Improved trilingual welcome message ──────────────────────────────
+WELCOME_MESSAGE = (
+    "🙏 *Scheme Finder में आपका स्वागत है!*\n"
+    "🙏 *Scheme Finder ಗೆ ಸ್ವಾಗತ!*\n"
+    "🙏 *Welcome to Scheme Finder!*\n\n"
+    "I find free government welfare schemes you qualify for.\n"
+    "ಸರ್ಕಾರಿ ಯೋಜನೆಗಳನ್ನು ಹುಡುಕಲು ನಿಮ್ಮ ಪರಿಸ್ಥಿತಿ ಹೇಳಿ.\n"
+    "अपनी स्थिति बताएं और मैं आपके लिए सही योजनाएं ढूंढूंगा।\n\n"
+    "─────────────────────\n"
+    "💬 *Type in any language — examples:*\n\n"
+    "🇮🇳 *Hindi:*\n"
+    "_मैं कर्नाटक में किसान हूँ, विधवा हूँ, आय 80,000 रुपये है_\n\n"
+    "🇮🇳 *Kannada:*\n"
+    "_ನಾನು ಕರ್ನಾಟಕದ ರೈತ, ವಿಧವೆ, ವಾರ್ಷಿಕ ಆದಾಯ 80,000 ರೂ_\n\n"
+    "🇬🇧 *English:*\n"
+    "_I am a widow farmer in Karnataka, income 80,000 per year_\n\n"
+    "─────────────────────\n"
+    "Include: *state, occupation, income, family situation*\n"
+    "What is your situation?"
+)
+# ────────────────────────────────────────────────────────────────────────────
+
+
 @whatsapp_webhook.route("/whatsapp", methods=["POST"])
 def webhook():
     """Main WhatsApp webhook — receives all incoming messages from Twilio."""
-    
     init_db()
 
     incoming_msg = request.form.get("Body", "").strip()
-    sender = request.form.get("From", "")  # e.g. whatsapp:+919876543210
+    sender = request.form.get("From", "")   # e.g. whatsapp:+919876543210
 
     resp = MessagingResponse()
     msg = resp.message()
 
     if not incoming_msg:
-        msg.body("🙏 Namaste! Please describe your situation to find government schemes you qualify for.\n\nExample: 'I am a widow farmer in Karnataka with income below 1 lakh'")
+        msg.body(
+            "🙏 Namaste! Please describe your situation to find government schemes.\n\n"
+            "Type *START* to see examples."
+        )
         return str(resp)
 
     # ── RESET command ─────────────────────────────────────────────
-    if incoming_msg.upper() in ("START", "RESET", "HI", "HELLO", "NAMASTE", "ನಮಸ್ಕಾರ", "नमस्ते"):
+    if incoming_msg.upper() in (
+        "START", "RESET", "HI", "HELLO", "NAMASTE",
+        "ನಮಸ್ಕಾರ", "नमस्ते"
+    ):
         sessions.pop(sender, None)
-        msg.body(
-            "🙏 *Welcome to Scheme Finder!*\n\n"
-            "I help you find government welfare schemes you qualify for — "
-            "free of charge.\n\n"
-            "Just tell me about yourself in any language:\n\n"
-            "• *English:* 'I am a widow farmer in Karnataka, income under 1 lakh'\n"
-            "• *Hindi:* 'Main Karnataka mein rehti hoon, widow hoon, khet hai'\n"
-            "• *Kannada:* 'ನಾನು ಕರ್ನಾಟಕದ ರೈತ, ವಿಧವೆ'\n\n"
-            "What is your situation?"
-        )
+        msg.body(WELCOME_MESSAGE)
         return str(resp)
 
     # ── Detail request (user types a number) ──────────────────────
@@ -137,6 +161,7 @@ def webhook():
                 "🙏 Type *START* to begin, then describe your situation "
                 "and I'll find schemes for you."
             )
+
         msg.body(reply)
         return str(resp)
 
@@ -149,7 +174,8 @@ def webhook():
             msg.body(
                 "🙏 Sorry, I couldn't understand that.\n\n"
                 "Please try describing your situation like:\n"
-                "'I am a widow in Karnataka with farming land and income below 1 lakh'"
+                "'I am a widow in Karnataka with farming land and income below 1 lakh'\n\n"
+                "Type *START* to see more examples."
             )
             return str(resp)
 
@@ -177,7 +203,11 @@ def webhook():
 
         # Append WhatsApp-specific instructions
         if matches:
-            reply += "\n\n─────────────────────\nReply with a *number* for full details. Type *START* to check again."
+            reply += (
+                "\n\n─────────────────────\n"
+                "Reply with a *number* for full details + apply link.\n"
+                "Type *START* to check again."
+            )
 
         msg.body(reply)
 

@@ -35,7 +35,7 @@ if not API_KEY:
     print("❌ GEMINI_API_KEY not found.")
     print("Create .env file with:")
     print("GEMINI_API_KEY=your_key_here")
-    exit(1)
+    print("⚠️  WARNING: GEMINI_API_KEY not set. NLP calls will fail gracefully.")
 
 # =========================================================
 # GEMINI CLIENT
@@ -177,7 +177,7 @@ def extract_profile(user_message: str) -> dict:
 
     except Exception as e:
         print(f"⚠️ Gemini extraction error: {e}")
-        return {}
+        return None
 
 # =========================================================
 # GENERATE USER RESPONSE
