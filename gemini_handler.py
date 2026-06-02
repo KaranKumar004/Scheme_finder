@@ -26,10 +26,8 @@ if os.path.exists(_env_path):
 API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 
 if not API_KEY:
-    print("❌ GEMINI_API_KEY not found.")
-    print("Create .env file with:")
-    print("GEMINI_API_KEY=your_key_here")
-    exit(1)
+     print("⚠️ GEMINI_API_KEY not found. NLP features will not work.")
+    
 
 # =========================================================
 # GEMINI CLIENT
