@@ -1,12 +1,6 @@
 """
-claude_handler.py — Gemini API version (UPDATED)
+gemini_handler.py — Gemini API version (India Benefits Finder)
 Works with latest google-genai SDK
-
-Install:
-pip install -U google-genai
-
-Add to .env:
-GEMINI_API_KEY=your_key_here
 """
 
 import os
@@ -50,11 +44,10 @@ MODEL_NAME = "gemini-2.5-flash"
 # =========================================================
 
 EXTRACTION_PROMPT = """
-You are helping a Government Scheme Finder for India.
+You are helping a welfare benefits portal called India Benefits Finder.
 
 Extract eligibility info from the user message.
-The message may be in English, Hindi, Kannada,
-Tamil, Telugu, Marathi, or mixed languages.
+The message may be in English, Hindi, Kannada, Tamil, Telugu, Marathi, or mixed languages.
 
 Return ONLY valid JSON.
 No markdown.
@@ -62,11 +55,15 @@ No explanation.
 
 {{
   "state": null,
+  "district": null,
   "occupation": null,
   "income": null,
   "family": null,
   "special": null,
   "gender": null,
+  "age": null,
+  "education": null,
+  "caste_category": null,
   "language": "english"
 }}
 
@@ -96,6 +93,12 @@ female
 male
 other
 
+Allowed caste_category:
+general
+obc
+sc
+st
+
 Language values:
 english
 hindi
@@ -105,14 +108,24 @@ telugu
 marathi
 other
 
-Mappings:
-- widow / vidhwa / ವಿಧವೆ -> widow
-- farmer / kisan / ರೈತ -> farmer
-- disabled / viklang / ಅಂಗವಿಕಲ -> disabled
-- pregnant / garbhwati / ಗರ್ಭಿಣಿ -> pregnant
-- student / vidyarthi / ವಿದ್ಯಾರ್ಥಿ -> student
-- BPL / poor / garib -> income=80000
-- 1 lakh -> income=100000
+Allowed education (extract closest fit):
+10th
+12th
+graduate
+postgraduate
+student
+
+Mappings & Vocab Guidance:
+- state: extract state name (e.g. Karnataka, Maharashtra, Tamil Nadu, Andhra Pradesh, Telangana, Uttar Pradesh)
+- district: extract local district if mentioned (e.g. Mysuru, Pune, Bangalore, Madurai, Thane, Hyderabad)
+- caste_category: general/samanya -> general, OBC/pichda varg/backward -> obc, SC/scheduled caste/harijan -> sc, ST/scheduled tribe/adivasi -> st
+- age: extract integers (e.g. "I am 22 years old" -> 22)
+- income: BPL / poor / garib -> income=80000, 1 lakh -> income=100000, 2 lakhs -> income=200000
+- widow / vidhwa / ವಿಧವೆ / விதவை (vithavai) / విధవ (vidhava) -> widow
+- farmer / kisan / ರೈತ / விவசாயி (vivasayi) / రైతు (raitu) / शेतकरी (shetkari) -> farmer
+- disabled / viklang / ಅಂಗವಿಕल / மாற்றுத்திறனாளி (matrutiranali) / వికలాంగుడు (vikalangudu) / दिव्यांग (divyang) -> disabled
+- pregnant / garbhwati / గర్భిణీ (garbhini) / கர்ப்பிணி (karppini) / गर्भवती (garbhawati) -> pregnant
+- student / vidyarthi / ವಿದ್ಯಾರ್ಥಿ / மாணவர் (manavar) / విద్యార్థి (vidyarthi) / विद्यार्थी (vidyarthi) -> student
 
 User message:
 {message}
@@ -123,16 +136,20 @@ User message:
 # =========================================================
 
 REPLY_PROMPT = """
-You are a warm helpful assistant for a Government Scheme Finder for India.
+You are a warm helpful assistant for India Benefits Finder.
 
 Users may be rural or semi-urban Indians.
 Keep language SIMPLE.
 
 IMPORTANT:
-Reply in the SAME language as the user.
+Reply in the SAME language as the user (English, Hindi, Kannada, Tamil, Telugu, or Marathi).
 
-Use:
-🙏 ✅ 💰
+Group the matched benefits in your response by type: Schemes, Loans, and Scholarships, using appropriate headings and emojis:
+🏛️ Schemes
+💰 Loans
+🎓 Scholarships
+
+Use emojis: 🙏 ✅ 💰 🎓 🏛️
 
 Keep sentences short.
 
@@ -150,9 +167,7 @@ Situation:
 # =========================================================
 
 def extract_profile(user_message: str) -> dict:
-
     try:
-
         prompt = EXTRACTION_PROMPT.format(
             message=user_message
         )
@@ -191,67 +206,74 @@ def generate_reply(
 ) -> str:
 
     if not matches:
-
         situation = (
-            "No schemes matched. "
-            "Suggest pmjay.gov.in and scholarships.gov.in "
-            "Ask user to try again."
+            "No benefits, schemes, loans, or scholarships matched. "
+            "Suggest checking pmjay.gov.in, scholarships.gov.in, and PM Mudra (mudra.org.in). "
+            "Ask the user to try again with more details."
         )
 
     elif detail_request is not None:
-
         idx = detail_request - 1
 
         if 0 <= idx < len(matches):
-
             s = matches[idx]
+            benefit_type = s.get("type", "scheme").upper()
 
             situation = f"""
-User wants details about:
+User wants details about this specific benefit:
 
-Scheme: {s['name']}
+Type: {benefit_type}
+Name: {s['name']}
+Ministry: {s.get('ministry', 'Welfare Dept')}
 Benefit: {s['benefit_amount']}
-Description: {s['benefit_description']}
-Eligibility: {s['eligibility_note']}
-Apply: {s['how_to_apply']}
-Documents: {s['documents_needed']}
-Website: {s['url']}
+Description: {s.get('benefit_description', 'No description')}
+Eligibility: {s.get('eligibility_note', 'Matching profile filters')}
+Apply: {s.get('how_to_apply', 'Visit block office')}
+Documents: {s.get('documents_needed', 'Aadhaar, income certificate')}
+Website: {s.get('url', 'N/A')}
 """
-
         else:
-
             situation = (
-                f"User requested scheme {detail_request} "
-                f"but only {len(matches)} schemes exist."
+                f"User requested benefit {detail_request} "
+                f"but only {len(matches)} benefits exist."
             )
 
     else:
+        # Group matches by type for prompt feeding
+        schemes = [m for m in matches if m.get("type") == "scheme"]
+        loans = [m for m in matches if m.get("type") == "loan"]
+        scholarships = [m for m in matches if m.get("type") == "scholarship"]
 
-        lines = []
+        sections = []
+        running_idx = 1
+        
+        def format_section(items, title, icon):
+            nonlocal running_idx
+            if not items:
+                return
+            sec_lines = [f"{icon} {title}:"]
+            for s in items:
+                reasons = ", ".join(s.get("match_reasons", []))
+                sec_lines.append(
+                    f"{running_idx}. {s['name']}\n"
+                    f"   Benefit: {s['benefit_amount']}\n"
+                    f"   Reason: {reasons}\n"
+                    f"   Apply: {s['how_to_apply'][:80]}...\n"
+                )
+                running_idx += 1
+            sections.append("\n".join(sec_lines))
 
-        for i, s in enumerate(matches, 1):
-
-            reasons = ", ".join(
-                s.get("match_reasons", [])
-            )
-
-            lines.append(
-                f"""
-{i}. {s['name']}
-Benefit: {s['benefit_amount']}
-Reason: {reasons}
-Apply: {s['how_to_apply']}
-"""
-            )
+        format_section(schemes, "Government Schemes", "🏛️")
+        format_section(loans, "Concessional Loans", "💰")
+        format_section(scholarships, "Scholarships & Educational Aid", "🎓")
 
         situation = (
-            f"{len(matches)} schemes found:\n\n"
-            + "\n".join(lines)
-            + "\n\nTell user to reply with a number for full details."
+            f"{len(matches)} benefits found:\n\n"
+            + "\n\n".join(sections)
+            + "\n\nTell the user they can reply with a number (e.g. 1, 2...) for full details."
         )
 
     try:
-
         prompt = REPLY_PROMPT.format(
             message=user_message,
             situation=situation
@@ -265,7 +287,6 @@ Apply: {s['how_to_apply']}
         return response.text.strip()
 
     except Exception as e:
-
         return f"⚠️ Error generating reply: {e}"
 
 # =========================================================
@@ -273,7 +294,6 @@ Apply: {s['how_to_apply']}
 # =========================================================
 
 def run_nlp_cli():
-
     import sys
 
     sys.path.insert(0, os.path.dirname(__file__))
@@ -283,8 +303,8 @@ def run_nlp_cli():
 
     print()
     print("╔══════════════════════════════════════════════════════╗")
-    print("║ 🇮🇳 Scheme Finder — Natural Language Mode (Gemini)  ║")
-    print("║ Type in English, Hindi, Kannada — anything works   ║")
+    print("║ 🇮🇳 India Benefits Finder — AI Assistant Mode         ║")
+    print("║ English, Hindi, Kannada, Tamil, Telugu, Marathi     ║")
     print("╚══════════════════════════════════════════════════════╝")
     print()
 
@@ -293,7 +313,6 @@ def run_nlp_cli():
     last_matches = []
 
     while True:
-
         print("─" * 54)
 
         try:
@@ -306,84 +325,67 @@ def run_nlp_cli():
         if not user_input:
             continue
 
-        if user_input.lower() in (
-            "exit",
-            "quit",
-            "bye"
-        ):
+        if user_input.lower() in ("exit", "quit", "bye"):
             print("\n🙏 Thank you. Jai Hind!\n")
             break
 
         # =====================================================
         # DETAIL REQUEST
         # =====================================================
-
         if re.match(r"^\d+$", user_input) and last_matches:
-
             n = int(user_input)
-
             reply = generate_reply(
                 last_matches,
                 user_input,
                 detail_request=n
             )
-
             print(f"\nBot: {reply}\n")
-
             continue
 
         # =====================================================
         # PROFILE EXTRACTION
         # =====================================================
-
-        print("\n⏳ Understanding your message...")
-
+        print("\n⏳ Parsing message...")
         profile = extract_profile(user_input)
 
         if not profile:
-            print(
-                "Bot: Sorry, could not understand. "
-                "Please try again.\n"
-            )
+            print("Bot: Sorry, could not parse profile. Try again.\n")
             continue
 
-        lang = profile.pop(
-            "language",
-            "english"
-        )
+        lang = profile.pop("language", "english")
 
         print(f"     Language : {lang}")
+        print(f"     Profile  : {json.dumps(profile, ensure_ascii=False)}")
 
-        print(
-            f"     Profile  : "
-            f"{json.dumps(profile, ensure_ascii=False)}"
-        )
+        # Clean income and age
+        if "income" in profile and profile["income"] is not None:
+            try:
+                profile["income"] = int(profile["income"])
+            except (ValueError, TypeError):
+                profile["income"] = None
+        if "age" in profile and profile["age"] is not None:
+            try:
+                profile["age"] = int(profile["age"])
+            except (ValueError, TypeError):
+                profile["age"] = None
 
         # =====================================================
         # MATCH SCHEMES
         # =====================================================
-
         matches = match_schemes(profile)
-
         last_matches = matches
 
         # =====================================================
         # GENERATE RESPONSE
         # =====================================================
-
-        print("\n⏳ Generating response...\n")
-
+        print("\n⏳ Generating reply...\n")
         reply = generate_reply(
             matches,
             user_input,
             language=lang
         )
-
         print(f"Bot: {reply}\n")
 
-# =========================================================
-# ENTRY POINT
-# =========================================================
 
 if __name__ == "__main__":
     run_nlp_cli()

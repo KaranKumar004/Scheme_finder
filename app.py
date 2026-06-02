@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 import os
 import sys
 import re
@@ -11,11 +11,16 @@ if sys.platform.startswith('win'):
 # Ensure we can import siblings
 sys.path.insert(0, os.path.dirname(__file__))
 
-from scheme_db import init_db, get_all_schemes, insert_scheme, delete_scheme
+from scheme_db import init_db, get_all_benefits, insert_benefit, delete_benefit
 from matcher import match_schemes
 import gemini_handler as nlp
+from whatsapp import whatsapp_webhook, sessions
+from pdf_generator import generate_benefits_pdf
 
 app = Flask(__name__)
+
+# Register Twilio WhatsApp webhook blueprint
+app.register_blueprint(whatsapp_webhook)
 
 @app.route("/")
 def home():
@@ -27,12 +32,13 @@ def home():
 def api_match():
     try:
         profile = request.json or {}
-        # Ensure income is an integer
-        if "income" in profile and profile["income"] is not None:
-            try:
-                profile["income"] = int(profile["income"])
-            except ValueError:
-                profile["income"] = None
+        # Clean numeric fields
+        for field in ("income", "age"):
+            if field in profile and profile[field] is not None:
+                try:
+                    profile[field] = int(profile[field])
+                except (ValueError, TypeError):
+                    profile[field] = None
         matches = match_schemes(profile)
         return jsonify({"success": True, "matches": matches})
     except Exception as e:
@@ -64,11 +70,12 @@ def api_chat():
         
         # Clean language and other attributes
         clean_profile = {k: v for k, v in profile.items() if k != "language"}
-        if "income" in clean_profile and clean_profile["income"] is not None:
-            try:
-                clean_profile["income"] = int(clean_profile["income"])
-            except ValueError:
-                clean_profile["income"] = None
+        for field in ("income", "age"):
+            if field in clean_profile and clean_profile[field] is not None:
+                try:
+                    clean_profile[field] = int(clean_profile[field])
+                except (ValueError, TypeError):
+                    clean_profile[field] = None
 
         matches = match_schemes(clean_profile)
         reply = nlp.generate_reply(matches, user_message, language=lang)
@@ -86,32 +93,113 @@ def api_chat():
 
 @app.route("/api/schemes", methods=["GET", "POST"])
 def api_schemes():
+    table_type = request.args.get("type", "scheme").strip().lower()
+    table_name = "schemes"
+    if table_type == "loan":
+        table_name = "loans"
+    elif table_type == "scholarship":
+        table_name = "scholarships"
+
     if request.method == "POST":
         try:
             scheme_data = request.json or {}
             if not scheme_data.get("name"):
-                return jsonify({"success": False, "error": "Scheme name is required"}), 400
-            new_id = insert_scheme(scheme_data)
-            return jsonify({"success": True, "id": new_id, "message": "Scheme added successfully"})
+                return jsonify({"success": False, "error": "Welfare title is required"}), 400
+            new_id = insert_benefit(table_name, scheme_data)
+            return jsonify({"success": True, "id": new_id, "message": "Benefit entry added successfully"})
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 400
     else:
         try:
-            schemes = [dict(row) for row in get_all_schemes()]
-            return jsonify({"success": True, "schemes": schemes})
+            benefits = [dict(row) for row in get_all_benefits(table_name)]
+            return jsonify({"success": True, "schemes": benefits})
         except Exception as e:
             return jsonify({"success": False, "error": str(e)}), 400
 
 @app.route("/api/schemes/<int:scheme_id>", methods=["DELETE"])
 def api_delete_scheme(scheme_id):
+    table_type = request.args.get("type", "scheme").strip().lower()
+    table_name = "schemes"
+    if table_type == "loan":
+        table_name = "loans"
+    elif table_type == "scholarship":
+        table_name = "scholarships"
+
     try:
-        success = delete_scheme(scheme_id)
+        success = delete_benefit(table_name, scheme_id)
         if success:
-            return jsonify({"success": True, "message": "Scheme deleted successfully"})
+            return jsonify({"success": True, "message": "Welfare entry deleted successfully"})
         else:
-            return jsonify({"success": False, "error": "Scheme not found"}), 404
+            return jsonify({"success": False, "error": "Entry not found"}), 404
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
+
+# ─── PDF REPORT GENERATION ROUTES ─────────────────────────────────────────────
+
+@app.route("/api/download_pdf", methods=["POST"])
+def download_pdf():
+    try:
+        data = request.json or {}
+        profile = data.get("profile", {})
+        
+        # Re-evaluate matches to ensure 100% consistency and accuracy
+        clean_profile = {k: v for k, v in profile.items() if k != "language"}
+        for field in ("income", "age"):
+            if field in clean_profile and clean_profile[field] is not None:
+                try:
+                    clean_profile[field] = int(clean_profile[field])
+                except (ValueError, TypeError):
+                    clean_profile[field] = None
+
+        matches = match_schemes(clean_profile)
+        pdf_buf = generate_benefits_pdf(clean_profile, matches)
+        
+        return send_file(
+            pdf_buf,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="India_Benefits_Finder_Report.pdf"
+        )
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+
+@app.route("/api/download_pdf/whatsapp/<phone>")
+def download_pdf_whatsapp(phone):
+    try:
+        session_data = None
+        # Look up phone number in the active in-memory WhatsApp sessions
+        for key, val in sessions.items():
+            if phone in key or key in phone:
+                session_data = val
+                break
+                
+        if not session_data:
+            # Fallback to an empty profile and matches if session not found
+            profile = {}
+            matches = []
+        else:
+            profile = session_data.get("profile", {})
+            matches = session_data.get("matches", [])
+            
+        # Clean profile
+        clean_profile = {k: v for k, v in profile.items() if k != "language"}
+        for field in ("income", "age"):
+            if field in clean_profile and clean_profile[field] is not None:
+                try:
+                    clean_profile[field] = int(clean_profile[field])
+                except (ValueError, TypeError):
+                    clean_profile[field] = None
+                    
+        pdf_buf = generate_benefits_pdf(clean_profile, matches)
+        
+        return send_file(
+            pdf_buf,
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name=f"India_Benefits_Finder_Report_{phone}.pdf"
+        )
+    except Exception as e:
+        return f"⚠️ Error compiling PDF report: {e}", 500
 
 if __name__ == "__main__":
     init_db()

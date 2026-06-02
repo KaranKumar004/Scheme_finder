@@ -1,5 +1,5 @@
 /* ==========================================================================
-   INDIA GOVERNMENT WELFARE PORTAL — DYNAMIC FRONTEND OVERHAUL
+   INDIA BENEFITS FINDER PORTAL — FRONTEND CONTROLLER
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const schemesList = document.getElementById("schemes-list");
     const resultsCount = document.getElementById("results-count");
+    const downloadReportBtn = document.getElementById("download-report-btn");
     
     // Modals
     const detailsModal = document.getElementById("details-modal");
@@ -44,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const adminTabAddContent = document.getElementById("admin-tab-add-content");
     const adminSearchInput = document.getElementById("admin-search-input");
     const adminSchemesTable = document.getElementById("admin-schemes-table");
+    const adminTableSelect = document.getElementById("admin-table-select");
 
     // 3. TAB & SIDEBAR NAVIGATION
     tabWizardBtn.addEventListener("click", () => switchTab("wizard"));
@@ -144,16 +146,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // Capture standard form inputs + Phase 2 fields
+    document.getElementById("wizard-district-field").addEventListener("input", matchProfile);
+    document.getElementById("wizard-age-field").addEventListener("input", matchProfile);
+    document.getElementById("wizard-education-field").addEventListener("change", matchProfile);
+
     // 7. GET FORM STATE & MATCH SCHEMES
     function getFormState() {
         const formData = new FormData(profileForm);
         return {
             state: formData.get("state"),
+            district: document.getElementById("wizard-district-field").value.trim(),
             occupation: formData.get("occupation"),
             income: parseInt(incomeSlider.value),
             family: formData.get("family"),
             special: formData.get("special"),
-            gender: formData.get("gender")
+            gender: formData.get("gender"),
+            
+            // Phase 2 advanced options
+            age: document.getElementById("wizard-age-field").value ? parseInt(document.getElementById("wizard-age-field").value) : null,
+            education: document.getElementById("wizard-education-field").value || null,
+            caste_category: formData.get("caste_category") || null
         };
     }
 
@@ -204,65 +217,103 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 8. RENDER SCHEME CARDS
+    // 8. RENDER SCHEME CARDS GROUPED BY TYPE
     function renderSchemes(matches) {
         resultsCount.innerText = `${matches.length} Matches`;
         
         if (matches.length === 0) {
+            downloadReportBtn.style.display = "none";
             schemesList.innerHTML = `
                 <div class="blank-state">
                     <div class="blank-state-glowing-circle">
                         <i data-lucide="search"></i>
                     </div>
-                    <h3>No Matching Schemes Found</h3>
-                    <p>No schemes matched this profile criteria. Try updating your selections or adjusting your annual household income bounds.</p>
+                    <h3>No Matching Benefits Found</h3>
+                    <p>No programs matched this profile criteria. Try updating your selections or adjusting your annual household income bounds.</p>
                 </div>
             `;
             lucide.createIcons();
             return;
         }
 
+        // Show the Download Report PDF button
+        downloadReportBtn.style.display = "flex";
+
         schemesList.innerHTML = "";
-        matches.forEach((s, idx) => {
-            const card = document.createElement("div");
-            card.className = "scheme-card";
-            
-            const levelClass = s.level === "central" ? "badge-indigo" : "badge-saffron";
-            const levelLabel = s.level.toUpperCase() + " PROGRAM";
-            
-            const reasonsHtml = s.match_reasons.map(reason => `
-                <span class="reason-item">
-                    <i data-lucide="check"></i>
-                    <span>Qualifies for ${reason}</span>
-                </span>
-            `).join("");
 
-            card.innerHTML = `
-                <div class="scheme-card-header">
-                    <div>
-                        <span class="badge ${levelClass}">${levelLabel}</span>
-                        <p class="mt-1">${s.ministry || "Ministry Department"}</p>
-                        <h3 class="mt-1">${s.name}</h3>
-                    </div>
+        // Separate matches by type
+        const schemes = matches.filter(m => m.type === "scheme");
+        const loans = matches.filter(m => m.type === "loan");
+        const scholarships = matches.filter(m => m.type === "scholarship");
+
+        function renderSection(items, sectionTitle, sectionIcon, levelClass) {
+            if (items.length === 0) return;
+
+            const sectionEl = document.createElement("div");
+            sectionEl.className = "results-type-section";
+
+            sectionEl.innerHTML = `
+                <div class="section-header-row">
+                    <i data-lucide="${sectionIcon}"></i>
+                    <h4>${sectionTitle}</h4>
+                    <span class="section-header-badge">${items.length}</span>
                 </div>
-                <div class="scheme-benefit-badge mt-1">
-                    <span class="scheme-benefit-label">Financial Benefit:</span>
-                    <p class="scheme-benefit-value">${s.benefit_amount}</p>
-                </div>
-                <div class="scheme-qualify-reasons mt-1">
-                    ${reasonsHtml}
-                </div>
-                <button class="btn btn-secondary mt-1 view-details-btn" data-index="${idx}">
-                    <span>View Application Details</span>
-                    <i data-lucide="chevron-right"></i>
-                </button>
+                <div class="section-cards-deck" style="display: flex; flex-direction: column; gap: 1.5rem;"></div>
             `;
-            schemesList.appendChild(card);
-        });
 
-        // Add event listeners to buttons
+            const deck = sectionEl.querySelector(".section-cards-deck");
+
+            items.forEach(s => {
+                const card = document.createElement("div");
+                card.className = "scheme-card";
+                
+                const cardLevelClass = s.level === "central" ? "badge-indigo" : "badge-saffron";
+                const typeLabel = s.type === "scheme" ? "SCHEME" : s.type === "loan" ? "LOAN" : "SCHOLARSHIP";
+                const levelLabel = s.level.toUpperCase() + " " + typeLabel;
+                
+                const reasonsHtml = s.match_reasons.map(reason => `
+                    <span class="reason-item">
+                        <i data-lucide="check"></i>
+                        <span>Qualifies for ${reason}</span>
+                    </span>
+                `).join("");
+
+                // Get original flat index in matches list to keep details matching correct
+                const flatIndex = matches.indexOf(s);
+
+                card.innerHTML = `
+                    <div class="scheme-card-header">
+                        <div>
+                            <span class="badge ${cardLevelClass}">${levelLabel}</span>
+                            <p class="mt-1">${s.ministry || "Ministry Department"}</p>
+                            <h3 class="mt-1">${s.name}</h3>
+                        </div>
+                    </div>
+                    <div class="scheme-benefit-badge mt-1">
+                        <span class="scheme-benefit-label">Financial Support:</span>
+                        <p class="scheme-benefit-value" style="color: #10b981; font-weight: 700;">${s.benefit_amount}</p>
+                    </div>
+                    <div class="scheme-qualify-reasons mt-1">
+                        ${reasonsHtml}
+                    </div>
+                    <button class="btn btn-secondary mt-1 view-details-btn" data-index="${flatIndex}">
+                        <span>View Application Details</span>
+                        <i data-lucide="chevron-right"></i>
+                    </button>
+                `;
+                deck.appendChild(card);
+            });
+
+            schemesList.appendChild(sectionEl);
+        }
+
+        renderSection(schemes, "Government Welfare Schemes", "landmark");
+        renderSection(loans, "Concessional Financial Loans", "banknote");
+        renderSection(scholarships, "Scholarships & Educational Aid", "graduation-cap");
+
+        // Add event listeners to details buttons
         document.querySelectorAll(".view-details-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
+            btn.addEventListener("click", () => {
                 const index = parseInt(btn.getAttribute("data-index"));
                 showSchemeDetails(matches[index]);
             });
@@ -273,8 +324,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 9. SCHEME DETAILS MODAL
     function showSchemeDetails(scheme) {
+        const typeLabel = scheme.type === "scheme" ? "SCHEME" : scheme.type === "loan" ? "LOAN" : "SCHOLARSHIP";
         document.getElementById("modal-level").className = `badge ${scheme.level === "central" ? "badge-indigo" : "badge-saffron"}`;
-        document.getElementById("modal-level").innerText = scheme.level.toUpperCase() + " PROGRAM";
+        document.getElementById("modal-level").innerText = scheme.level.toUpperCase() + " " + typeLabel;
         document.getElementById("modal-name").innerText = scheme.name;
         document.getElementById("modal-ministry").innerText = scheme.ministry || "Ministry Department";
         document.getElementById("modal-benefit").innerText = scheme.benefit_amount;
@@ -318,7 +370,42 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 10. AI CHATBOT SYSTEM
+    // 10. PDF REPORT GENERATOR TRIGGERS
+    downloadReportBtn.addEventListener("click", () => {
+        const state = getFormState();
+        downloadReportBtn.disabled = true;
+        downloadReportBtn.querySelector("span").innerText = "Generating Report PDF...";
+        
+        fetch("/api/download_pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profile: state })
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Server error compiling PDF");
+            return res.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "India_Benefits_Finder_Report.pdf";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(err => {
+            console.error("PDF generation failed:", err);
+            alert("⚠️ Failed to generate benefits PDF. Please check connection and try again.");
+        })
+        .finally(() => {
+            downloadReportBtn.disabled = false;
+            downloadReportBtn.querySelector("span").innerText = "Download Benefits Report (PDF)";
+        });
+    });
+
+    // 11. AI CHATBOT SYSTEM
     chatSendBtn.addEventListener("click", handleUserMessage);
     chatInput.addEventListener("keypress", (e) => {
         if (e.key === "Enter") {
@@ -424,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el) el.remove();
     }
 
-    // 11. AI FORM SYNC & DIGNIFIED BADGES
+    // 12. AI FORM SYNC & DIGNIFIED BADGES (WITH PHASE 2 FIELDS)
     function syncFormFromAI(profile) {
         syncTagsContainer.innerHTML = "";
         let syncCount = 0;
@@ -432,11 +519,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // Mapping raw keys to dignified label overrides
         const tagLabels = {
             "state": "State",
+            "district": "District",
             "occupation": "Livelihood",
             "family": "Family Status",
             "special": "Demographic",
             "gender": "Gender",
-            "income": "Welfare Tier"
+            "income": "Welfare Tier",
+            "age": "Age",
+            "education": "Education",
+            "caste_category": "Caste"
         };
 
         const occupationLabels = {
@@ -463,6 +554,14 @@ document.addEventListener("DOMContentLoaded", () => {
             "none": "General Category"
         };
 
+        const educationLabels = {
+            "student": "School Student",
+            "10th": "10th Pass",
+            "12th": "12th Pass",
+            "graduate": "Graduate",
+            "postgraduate": "Postgraduate"
+        };
+
         // Loop keys and apply selections
         const keys = ["state", "occupation", "family", "special", "gender"];
         keys.forEach(key => {
@@ -484,6 +583,38 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
+
+        // Sync District (Phase 2)
+        if (profile.district) {
+            document.getElementById("wizard-district-field").value = profile.district;
+            syncCount++;
+            addSyncBadge(tagLabels["district"], profile.district.charAt(0).toUpperCase() + profile.district.slice(1));
+        }
+
+        // Sync Age (Phase 2)
+        if (profile.age !== undefined && profile.age !== null) {
+            document.getElementById("wizard-age-field").value = profile.age;
+            syncCount++;
+            addSyncBadge(tagLabels["age"], `${profile.age} Yrs`);
+        }
+
+        // Sync Education (Phase 2)
+        if (profile.education) {
+            const eduSelect = document.getElementById("wizard-education-field");
+            eduSelect.value = profile.education;
+            syncCount++;
+            addSyncBadge(tagLabels["education"], educationLabels[profile.education] || profile.education);
+        }
+
+        // Sync Caste (Phase 2)
+        if (profile.caste_category) {
+            const casteRadio = profileForm.querySelector(`input[name="caste_category"][value="${profile.caste_category}"]`);
+            if (casteRadio) {
+                casteRadio.checked = true;
+                syncCount++;
+                addSyncBadge(tagLabels["caste_category"], profile.caste_category.toUpperCase());
+            }
+        }
 
         // Handle Income slider
         if (profile.income !== undefined && profile.income !== null) {
@@ -510,7 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
         syncTagsContainer.appendChild(badge);
     }
 
-    // 12. ADMIN PORTAL LOGIC
+    // 13. ADMIN PORTAL LOGIC (UPGRADED FOR SCHEMES, LOANS, SCHOLARSHIPS TABLES)
     adminToggleBtn.addEventListener("click", () => {
         loadAdminSchemes();
         adminModal.classList.add("active");
@@ -531,6 +662,7 @@ document.addEventListener("DOMContentLoaded", () => {
         adminTabAdd.classList.remove("active");
         adminTabListContent.classList.add("active");
         adminTabAddContent.classList.remove("active");
+        loadAdminSchemes();
     });
 
     adminTabAdd.addEventListener("click", () => {
@@ -540,11 +672,15 @@ document.addEventListener("DOMContentLoaded", () => {
         adminTabListContent.classList.remove("active");
     });
 
-    // Fetch and list existing schemes in admin
+    // Refresh database table when the type select dropdown is changed
+    adminTableSelect.addEventListener("change", loadAdminSchemes);
+
+    // Fetch and list existing benefits in admin
     function loadAdminSchemes() {
-        adminSchemesTable.innerHTML = `<p style="text-align:center; padding:1.5rem; color:var(--text-muted);">Loading schemes from database...</p>`;
+        const activeTable = adminTableSelect.value;
+        adminSchemesTable.innerHTML = `<p style="text-align:center; padding:1.5rem; color:var(--text-muted);">Loading database entries from ${activeTable}s table...</p>`;
         
-        fetch("/api/schemes")
+        fetch(`/api/schemes?type=${activeTable}`)
         .then(res => res.json())
         .then(data => {
             if (data.success) {
@@ -558,8 +694,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderAdminSchemes(schemes) {
+        const activeTable = adminTableSelect.value;
         if (schemes.length === 0) {
-            adminSchemesTable.innerHTML = `<p style="text-align:center; padding:1.5rem; color:var(--text-muted);">No schemes inside database.</p>`;
+            adminSchemesTable.innerHTML = `<p style="text-align:center; padding:1.5rem; color:var(--text-muted);">No entries found in ${activeTable}s table.</p>`;
             return;
         }
 
@@ -582,9 +719,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Delete Event
         document.querySelectorAll(".admin-delete-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
+            btn.addEventListener("click", () => {
                 const id = btn.getAttribute("data-id");
-                if (confirm("Are you sure you want to delete this scheme permanently from schemes.db?")) {
+                if (confirm(`Are you sure you want to delete this benefit permanently from the ${activeTable}s table?`)) {
                     deleteSchemeFromDB(id);
                 }
             });
@@ -604,13 +741,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function deleteSchemeFromDB(id) {
-        fetch(`/api/schemes/${id}`, {
+        const activeTable = adminTableSelect.value;
+        fetch(`/api/schemes/${id}?type=${activeTable}`, {
             method: "DELETE"
         })
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert("Scheme deleted successfully!");
+                alert("Benefit entry deleted successfully!");
                 loadAdminSchemes();
                 matchProfile(); // Update active matching results
             } else {
@@ -622,6 +760,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Submit new scheme to Database
     window.submitNewScheme = function() {
+        const activeTable = document.getElementById("form-type-select").value;
+        
         const schemeData = {
             name: document.getElementById("form-name").value,
             level: document.getElementById("form-level").value,
@@ -662,7 +802,7 @@ document.addEventListener("DOMContentLoaded", () => {
             eligibility_note: document.getElementById("form-eligibility-note").value
         };
 
-        fetch("/api/schemes", {
+        fetch(`/api/schemes?type=${activeTable}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(schemeData)
@@ -670,11 +810,12 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert("Welfare scheme successfully saved to schemes.db!");
+                alert(`Benefit entry successfully added to the ${activeTable}s database!`);
                 document.getElementById("add-scheme-form").reset();
                 
                 // Switch back to list tab
                 adminTabList.click();
+                adminTableSelect.value = activeTable; // Match tab with inserted type
                 loadAdminSchemes();
                 matchProfile(); // Update active matching results
             } else {

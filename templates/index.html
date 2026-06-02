@@ -13,6 +13,136 @@
     <!-- Custom Stylesheet -->
     <link rel="stylesheet" href="/static/css/style.css">
     
+    <style>
+        /* Modern Inputs Styling */
+        .text-input-field, .select-input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.7);
+            color: #1f2937;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.25s ease;
+            margin-top: 0.25rem;
+        }
+        .text-input-field:focus, .select-input-field:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            background: #fff;
+        }
+        .form-field-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .form-field-col {
+            flex: 1;
+        }
+        .dignified-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        /* Caste Chips Selector */
+        .caste-chip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .caste-chip {
+            cursor: pointer;
+            position: relative;
+        }
+        .caste-chip input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .caste-chip span {
+            display: block;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            transition: all 0.2s ease;
+        }
+        .caste-chip input:checked + span {
+            background: #6366f1;
+            color: #fff;
+            border-color: #6366f1;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+        }
+        
+        /* Download PDF Button Styling */
+        .btn-download-pdf {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: none !important;
+            color: #fff !important;
+            padding: 0.75rem 1.25rem !important;
+            font-weight: 600 !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.5rem !important;
+            transition: all 0.25s ease !important;
+            margin-top: 1rem;
+        }
+        .btn-download-pdf:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4) !important;
+        }
+        
+        /* Grouped Results Headers */
+        .results-type-section {
+            margin-top: 1.5rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            padding-top: 1.5rem;
+        }
+        .results-type-section:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: #1e3a8a;
+        }
+        .section-header-row i {
+            width: 20px;
+            height: 20px;
+        }
+        .section-header-row h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .section-header-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: #6366f1;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+    </style>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -168,6 +298,10 @@
                                             <span class="option-label">Other States</span>
                                         </span>
                                     </label>
+                                </div>
+                                <div class="district-input-wrapper mt-1">
+                                    <label for="wizard-district-field" class="dignified-label">🌆 District (Optional):</label>
+                                    <input type="text" id="wizard-district-field" name="district" placeholder="e.g. Mysuru, Pune, Bangalore" class="text-input-field">
                                 </div>
                             </div>
 
@@ -383,6 +517,25 @@
                                         </span>
                                     </label>
                                 </div>
+                                <div class="additional-profile-inputs mt-1">
+                                    <div class="form-field-row">
+                                        <div class="form-field-col">
+                                            <label for="wizard-age-field" class="dignified-label">🎂 Age:</label>
+                                            <input type="number" id="wizard-age-field" name="age" min="1" max="120" placeholder="e.g. 25" class="text-input-field">
+                                        </div>
+                                        <div class="form-field-col">
+                                            <label for="wizard-education-field" class="dignified-label">🎓 Education Level:</label>
+                                            <select id="wizard-education-field" name="education" class="select-input-field">
+                                                <option value="">Select Education (Optional)</option>
+                                                <option value="student">School Student</option>
+                                                <option value="10th">Secondary School (10th Pass)</option>
+                                                <option value="12th">Senior Secondary (12th Pass)</option>
+                                                <option value="graduate">Undergraduate / College Graduate</option>
+                                                <option value="postgraduate">Postgraduate</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- STEP 6: GENDER -->
@@ -419,6 +572,27 @@
                                             <span class="option-title">Other</span>
                                         </span>
                                     </label>
+                                </div>
+                                <div class="caste-input-wrapper mt-1">
+                                    <label class="dignified-label">🌟 Caste Category:</label>
+                                    <div class="caste-chip-grid">
+                                        <label class="caste-chip">
+                                            <input type="radio" name="caste_category" value="general">
+                                            <span>General</span>
+                                        </label>
+                                        <label class="caste-chip">
+                                            <input type="radio" name="caste_category" value="obc">
+                                            <span>OBC</span>
+                                        </label>
+                                        <label class="caste-chip">
+                                            <input type="radio" name="caste_category" value="sc">
+                                            <span>SC</span>
+                                        </label>
+                                        <label class="caste-chip">
+                                            <input type="radio" name="caste_category" value="st">
+                                            <span>ST</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
 
@@ -487,6 +661,12 @@
                             <span id="results-count" class="results-indicator-badge">0 Matches</span>
                         </div>
                         <p class="results-meta-desc">These benefits are dynamically updated to match your profile.</p>
+                        <div class="download-report-container">
+                            <button id="download-report-btn" class="btn-download-pdf" style="display: none;">
+                                <i data-lucide="file-down"></i>
+                                <span>Download Benefits Report (PDF)</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Schemes Card Deck -->
@@ -596,9 +776,16 @@
                 
                 <!-- LIST SCHEMES TAB -->
                 <div id="admin-tab-list-content" class="admin-tab-panel active">
-                    <div class="admin-search-wrapper">
-                        <i data-lucide="search"></i>
-                        <input type="text" id="admin-search-input" placeholder="Search database schemes by name or department...">
+                    <div class="admin-tab-controls" style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center;">
+                        <div class="admin-search-wrapper" style="flex: 1; margin: 0;">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="admin-search-input" placeholder="Search database by name or department...">
+                        </div>
+                        <select id="admin-table-select" class="select-input-field" style="max-width: 200px; margin-top: 0;">
+                            <option value="scheme">Schemes Table</option>
+                            <option value="loan">Loans Table</option>
+                            <option value="scholarship">Scholarships Table</option>
+                        </select>
                     </div>
                     <div class="admin-table-deck" id="admin-schemes-table">
                         <!-- Populated dynamically -->
@@ -609,6 +796,17 @@
                 <div id="admin-tab-add-content" class="admin-tab-panel">
                     <form id="add-scheme-form" onsubmit="event.preventDefault(); submitNewScheme();" class="admin-scroll-form">
                         
+                        <div class="admin-form-row" style="margin-bottom: 1rem;">
+                            <div class="form-field width-100">
+                                <label for="form-type-select">Benefit Category / Database Table *</label>
+                                <select id="form-type-select" class="select-input-field" style="margin-top: 0.25rem;">
+                                    <option value="scheme">Welfare Scheme (schemes table)</option>
+                                    <option value="loan">Financial Loan (loans table)</option>
+                                    <option value="scholarship">Educational Scholarship (scholarships table)</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="admin-form-row">
                             <div class="form-field width-66">
                                 <label for="form-name">Scheme / Program Title *</label>
