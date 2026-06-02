@@ -1,0 +1,104 @@
+    <style>
+        /* Modern Inputs Styling */
+        .text-input-field, .select-input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.7);
+            color: #1f2937;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.25s ease;
+            margin-top: 0.25rem;
+        }
+        .text-input-field:focus, .select-input-field:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+            background: #fff;
+        }
+        .form-field-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        .form-field-col {
+            flex: 1;
+        }
+        .dignified-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+        
+        /* Caste Chips Selector */
+        .caste-chip-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .caste-chip {
+            cursor: pointer;
+            position: relative;
+        }
+        .caste-chip input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .caste-chip span {
+            display: block;
+        .btn-chat-submit {
+            height: auto;
+            border-radius: var(--radius-lg, 16px) !important;
+        }
+
+        /* Hide horizontal scrollbar in Chat Viewport */
+        .chat-viewport {
+            overflow-x: hidden !important;
+        }
+
+        /* Global premium body grid lines */
+        body {
+            background-color: #030305 !important;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.003) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255, 255, 255, 0.003) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Animated glowing background spheres */
+        @keyframes float1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(3vw, 2vh) scale(1.08); }
+        }
+        @keyframes float2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-2vw, -3vh) scale(1.05); }
+        }
+        @keyframes float3 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(2vw, -2vh) scale(1.1); }
+        }
+
+        .glow-saffron {
+            animation: float1 12s infinite alternate ease-in-out;
+        }
+        .glow-indigo {
+            animation: float2 15s infinite alternate ease-in-out;
+        }
+        .glow-emerald {
+            animation: float3 17s infinite alternate ease-in-out;
+        }
+    </style>

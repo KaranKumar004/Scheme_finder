@@ -825,6 +825,87 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => alert("Communication error: " + err));
     };
 
+    // Add premium halftone overlay to all option cards dynamically!
+    document.querySelectorAll(".option-card").forEach(card => {
+        card.classList.add("premium-glow-border");
+        const halftone = document.createElement("div");
+        halftone.className = "halftone-overlay";
+        card.appendChild(halftone);
+    });
+
+    // ─── PREMIUM INTRO LOADING SCREEN ──────────────────────────────────────────
+    const loadingScreen = document.getElementById("loading-screen");
+    const loadingCounter = document.getElementById("loading-counter");
+    const loadingProgressFill = document.getElementById("loading-progress-fill");
+    const loadingWord = document.getElementById("loading-word");
+
+    const loadingWords = ["Discover", "Empower", "Uplift", "Sustain"];
+    let wordIndex = 0;
+
+    const wordInterval = setInterval(() => {
+        if (loadingWord) {
+            loadingWord.style.opacity = "0";
+            loadingWord.style.transform = "translateY(-10px)";
+            
+            setTimeout(() => {
+                wordIndex = (wordIndex + 1) % loadingWords.length;
+                loadingWord.innerText = loadingWords[wordIndex];
+                loadingWord.style.opacity = "1";
+                loadingWord.style.transform = "translateY(0)";
+            }, 200);
+        }
+    }, 600);
+
+    let count = 0;
+    const duration = 2200; // 2.2 seconds loading duration
+    const startTime = performance.now();
+
+    function updateLoader(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        count = Math.floor(progress * 100);
+
+        if (loadingCounter) {
+            loadingCounter.innerText = String(count).padStart(3, "0");
+        }
+        if (loadingProgressFill) {
+            loadingProgressFill.style.width = `${count}%`;
+        }
+
+        if (progress < 1) {
+            requestAnimationFrame(updateLoader);
+        } else {
+            clearInterval(wordInterval);
+            setTimeout(() => {
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = "0";
+                    loadingScreen.style.visibility = "hidden";
+                }
+            }, 300);
+        }
+    }
+
+    requestAnimationFrame(updateLoader);
+
+    // ─── HERO ROTATING SUBTITLE ──────────────────────────────────────────────
+    const heroRotatingWord = document.getElementById("hero-rotating-word");
+    const subtitleWords = ["dignity", "opportunity", "welfare schemes", "concessional loans", "educational scholarships"];
+    let subtitleIndex = 0;
+    
+    setInterval(() => {
+        if (heroRotatingWord) {
+            heroRotatingWord.style.opacity = "0";
+            heroRotatingWord.style.transform = "translateY(-5px)";
+            
+            setTimeout(() => {
+                subtitleIndex = (subtitleIndex + 1) % subtitleWords.length;
+                heroRotatingWord.innerText = subtitleWords[subtitleIndex];
+                heroRotatingWord.style.opacity = "1";
+                heroRotatingWord.style.transform = "translateY(0)";
+            }, 200);
+        }
+    }, 2000);
+
     // Run first initialization match
     matchProfile();
 });
